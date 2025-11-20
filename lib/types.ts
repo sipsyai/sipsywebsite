@@ -347,3 +347,46 @@ export interface AboutUs {
   heroSection: AboutUsHeroSection;
   sections?: AboutUsContentSection[];
 }
+
+// ========================================
+// WhatsApp Business API Types
+// ========================================
+
+/**
+ * WhatsApp message structure from Meta webhook
+ */
+export interface WhatsAppWebhookMessage {
+  from: string;
+  id: string;
+  timestamp: string;
+  text?: {
+    body: string;
+  };
+  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+}
+
+/**
+ * Parsed WhatsApp message for internal use
+ */
+export interface ParsedWhatsAppMessage {
+  from: string;
+  messageId: string;
+  message: string;
+  timestamp: Date;
+  type: string;
+}
+
+/**
+ * WhatsApp message stored in Strapi
+ */
+export interface WhatsAppMessage {
+  from: string;
+  message: string;
+  messageId: string;
+  timestamp: string;
+  status: 'received' | 'replied';
+  reply?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}
