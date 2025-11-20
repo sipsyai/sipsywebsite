@@ -214,11 +214,11 @@ pm2 restart all
    # Use the HTTPS URL from ngrok
    ```
 
-   - Callback URL: `https://your-ngrok-url.ngrok.io/api/webhooks/whatsapp`
+   - Callback URL: `https://your-ngrok-url.ngrok.io/webhooks/whatsapp`
    - Verify Token: (paste your `WHATSAPP_VERIFY_TOKEN`)
 
 4. **For Production**:
-   - Callback URL: `https://sipsy.ai/api/webhooks/whatsapp`
+   - Callback URL: `https://sipsy.ai/webhooks/whatsapp`
    - Verify Token: (paste your production `WHATSAPP_VERIFY_TOKEN`)
 
 5. Click **"Verify and Save"**
@@ -253,7 +253,7 @@ pm2 restart all
 npm run dev
 
 # In another terminal, test GET endpoint
-curl "http://localhost:3000/api/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=your_verify_token&hub.challenge=test123"
+curl "http://localhost:3000/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=your_verify_token&hub.challenge=test123"
 
 # Expected response: test123
 ```
@@ -333,7 +333,7 @@ pm2 logs nextjs-frontend --lines 50
 1. Go to: https://developers.facebook.com
 2. Open your app → WhatsApp → Configuration
 3. Edit Webhook:
-   - Callback URL: `https://sipsy.ai/api/webhooks/whatsapp`
+   - Callback URL: `https://sipsy.ai/webhooks/whatsapp`
    - Verify Token: (your production token)
 4. Click **"Verify and Save"**
 
@@ -443,7 +443,7 @@ pm2 logs nextjs-frontend --lines 100
 
 ### API Endpoints
 
-- **Webhook URL**: `https://sipsy.ai/api/webhooks/whatsapp`
+- **Webhook URL**: `https://sipsy.ai/webhooks/whatsapp`
 - **Admin Panel**: `https://sipsy.ai/whatsapp`
 - **Strapi Admin**: `https://sipsy.ai/admin`
 - **Strapi API**: `https://sipsy.ai/api/whatsapp-messages`
@@ -451,7 +451,7 @@ pm2 logs nextjs-frontend --lines 100
 ### Important Files
 
 ```
-/app/api/webhooks/whatsapp/route.ts  # Webhook handler
+/app/webhooks/whatsapp/route.ts  # Webhook handler
 /app/whatsapp/page.tsx               # Admin panel
 /lib/whatsapp.ts                     # Helper functions
 /lib/types.ts                        # TypeScript types
