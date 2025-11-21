@@ -9,6 +9,7 @@
 import mockDataService, { MachineModule } from '../services/mock-data-service';
 import sessionService from '../services/session-service';
 import validationService from '../services/validation-service';
+import encryptionService from '../services/encryption-service';
 
 // Type definitions for WhatsApp Flow API
 interface FlowRequest {
@@ -33,7 +34,32 @@ export default {
    */
   async handle(ctx) {
     try {
-      const requestBody: FlowRequest = ctx.request.body;
+      let requestBody: FlowRequest;
+
+      // Check if request is encrypted
+      if (ctx.request.body.encrypted_flow_data && encryptionService.isConfigured()) {
+        console.log('[FlowController] Decrypting encrypted request');
+
+        try {
+          const decrypted = encryptionService.decryptRequest(
+            ctx.request.body.encrypted_flow_data,
+            ctx.request.body.encrypted_aes_key,
+            ctx.request.body.initial_vector
+          );
+
+          requestBody = decrypted;
+          console.log('[FlowController] Request decrypted successfully');
+        } catch (error) {
+          console.error('[FlowController] Decryption failed:', error);
+          ctx.status = 400;
+          ctx.body = { error_message: 'Failed to decrypt request' };
+          return;
+        }
+      } else {
+        // Unencrypted request (for testing)
+        requestBody = ctx.request.body as FlowRequest;
+      }
+
       const { action, flow_token, screen, data } = requestBody;
 
       console.log(`[FlowController] Received ${action} request`, {
