@@ -1,0 +1,381 @@
+{
+  "version": "5.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "MAIN_MENU": ["SHIP_SELECT"],
+    "SHIP_SELECT": ["MODULE_SELECT"],
+    "MODULE_SELECT": ["MACHINE_LIST"],
+    "MACHINE_LIST": ["UPDATE_HOURS"],
+    "UPDATE_HOURS": ["CONFIRMATION"],
+    "CONFIRMATION": []
+  },
+  "screens": [
+    {
+      "id": "MAIN_MENU",
+      "title": "Port Management System",
+      "terminal": false,
+      "data": {
+        "user_name": {
+          "type": "string",
+          "__example__": "Kaptan Ahmet"
+        },
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "ship_001",
+              "title": "MV ATLAS",
+              "description": "Turkey | IMO: 9876543"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Hoşgeldiniz ${data.user_name}"
+          },
+          {
+            "type": "TextSubheading",
+            "text": "Lütfen bir gemi seçin:"
+          },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "selected_ship_id",
+            "label": "Gemiler",
+            "data-source": "${data.ships}",
+            "required": true
+          },
+          {
+            "type": "Footer",
+            "label": "Devam Et",
+            "on-click-action": {
+              "name": "navigate",
+              "next": {
+                "type": "screen",
+                "name": "SHIP_SELECT"
+              },
+              "payload": {
+                "selected_ship_id": "${form.selected_ship_id}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "SHIP_SELECT",
+      "title": "Modül Seçimi",
+      "terminal": false,
+      "data": {
+        "ship_name": {
+          "type": "string",
+          "__example__": "MV ATLAS"
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "propulsion",
+              "title": "🚢 Propulsion (İtici Sistem)"
+            },
+            {
+              "id": "electrical",
+              "title": "⚡ Electrical (Elektrik)"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.ship_name}"
+          },
+          {
+            "type": "TextSubheading",
+            "text": "Modül seçin:"
+          },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "selected_module",
+            "label": "Modüller",
+            "data-source": "${data.modules}",
+            "required": true
+          },
+          {
+            "type": "Footer",
+            "label": "Devam Et",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "selected_module": "${form.selected_module}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "MODULE_SELECT",
+      "title": "Makine Seçimi",
+      "terminal": false,
+      "data": {
+        "machines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "current_hours": {
+                "type": "number"
+              },
+              "maintenance_status": {
+                "type": "string"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "machine_001",
+              "code": "ME-01",
+              "name": "Ana Motor (Main Engine)",
+              "current_hours": 12450,
+              "maintenance_status": "✅ 50 hours until next maintenance"
+            }
+          ]
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Makine Seçin"
+          },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "selected_machine_id",
+            "label": "Makineler",
+            "data-source": "${data.machines}",
+            "label-field": "name",
+            "description-field": "maintenance_status",
+            "required": true
+          },
+          {
+            "type": "Footer",
+            "label": "Güncelle",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "selected_machine_id": "${form.selected_machine_id}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "MACHINE_LIST",
+      "title": "Saat Güncelleme",
+      "terminal": false,
+      "data": {
+        "machine_code": {
+          "type": "string",
+          "__example__": "ME-01"
+        },
+        "machine_name": {
+          "type": "string",
+          "__example__": "Ana Motor (Main Engine)"
+        },
+        "current_hours": {
+          "type": "number",
+          "__example__": 12450
+        },
+        "next_maintenance": {
+          "type": "number",
+          "__example__": 12500
+        },
+        "version": {
+          "type": "number",
+          "__example__": 1
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.machine_code}"
+          },
+          {
+            "type": "TextSubheading",
+            "text": "${data.machine_name}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Mevcut Saat: ${data.current_hours}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Sonraki Bakım: ${data.next_maintenance}"
+          },
+          {
+            "type": "TextInput",
+            "name": "new_hours",
+            "label": "Yeni Çalışma Saati",
+            "input-type": "number",
+            "required": true,
+            "helper-text": "Mevcut saatten büyük bir değer girin"
+          },
+          {
+            "type": "Footer",
+            "label": "Güncelle",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "new_hours": "${form.new_hours}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "UPDATE_HOURS",
+      "title": "Güncelleme Tamamlandı",
+      "terminal": true,
+      "data": {
+        "success": {
+          "type": "boolean",
+          "__example__": true
+        },
+        "machine_code": {
+          "type": "string",
+          "__example__": "ME-01"
+        },
+        "machine_name": {
+          "type": "string",
+          "__example__": "Ana Motor"
+        },
+        "old_hours": {
+          "type": "number",
+          "__example__": 12450
+        },
+        "new_hours": {
+          "type": "number",
+          "__example__": 12480
+        },
+        "next_maintenance": {
+          "type": "number",
+          "__example__": 12500
+        },
+        "updated_at": {
+          "type": "string",
+          "__example__": "21.11.2025 14:30"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "✅ Başarılı!"
+          },
+          {
+            "type": "TextSubheading",
+            "text": "${data.machine_code} - ${data.machine_name}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Eski Saat: ${data.old_hours}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Yeni Saat: ${data.new_hours}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Sonraki Bakım: ${data.next_maintenance}"
+          },
+          {
+            "type": "TextBody",
+            "text": "Güncellenme: ${data.updated_at}"
+          },
+          {
+            "type": "Footer",
+            "label": "Tamam",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "CONFIRMATION",
+      "title": "İşlem Tamamlandı",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "Working hours updated successfully! ✅"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Kapat",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

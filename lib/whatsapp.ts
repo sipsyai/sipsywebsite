@@ -216,6 +216,102 @@ export async function saveMessageToStrapi(
 }
 
 /**
+ * Send a WhatsApp Flow message (interactive)
+ * Triggers the PMS Flow for machine working hours updates
+ */
+export async function sendWhatsAppFlow(
+  to: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const flowId = process.env.WHATSAPP_FLOW_ID;
+
+  if (!accessToken || !phoneNumberId) {
+    console.error('WhatsApp credentials not configured');
+    return {
+      success: false,
+      error: 'WhatsApp credentials not configured',
+    };
+  }
+
+  if (!flowId) {
+    console.warn('WHATSAPP_FLOW_ID not configured, Flow cannot be sent');
+    return {
+      success: false,
+      error: 'Flow ID not configured. Please set WHATSAPP_FLOW_ID in environment variables.',
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `${WHATSAPP_API_URL}/${phoneNumberId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: to,
+          type: 'interactive',
+          interactive: {
+            type: 'flow',
+            header: {
+              type: 'text',
+              text: '🚢 Port Management System'
+            },
+            body: {
+              text: 'Gemi makinelerinin çalışma saatlerini güncellemek için aşağıdaki butona tıklayın.'
+            },
+            footer: {
+              text: 'Powered by Sipsy'
+            },
+            action: {
+              name: 'flow',
+              parameters: {
+                flow_message_version: '3',
+                flow_token: `flow_${to}`,
+                flow_id: flowId,
+                flow_cta: 'Başlat',
+                flow_action: 'navigate',
+                flow_action_payload: {
+                  screen: 'MAIN_MENU'
+                }
+              }
+            }
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('WhatsApp Flow API error:', errorData);
+      return {
+        success: false,
+        error: errorData.error?.message || 'Failed to send Flow',
+      };
+    }
+
+    const data = await response.json();
+    console.log('✅ Flow message sent successfully:', data);
+
+    return {
+      success: true,
+      messageId: data.messages?.[0]?.id,
+    };
+  } catch (error) {
+    console.error('Error sending WhatsApp Flow:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
  * Fetch WhatsApp messages from Strapi
  * Used by admin panel to display message history
  */

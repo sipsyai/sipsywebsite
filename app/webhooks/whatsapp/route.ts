@@ -13,6 +13,7 @@ import {
   verifyWebhook,
   parseIncomingMessage,
   sendWhatsAppMessage,
+  sendWhatsAppFlow,
   saveMessageToStrapi,
 } from '@/lib/whatsapp';
 
@@ -103,16 +104,40 @@ export async function POST(request: NextRequest) {
       timestamp: parsedMessage.timestamp,
     });
 
-    // Send "ok" reply to the user
-    const sendResult = await sendWhatsAppMessage(
-      parsedMessage.from,
-      'ok'
-    );
+    // Check if message triggers the Flow
+    const messageText = parsedMessage.message.toLowerCase().trim();
+    const flowTriggers = ['pms', 'demo', 'flow', 'çalışma', 'saat', 'makine', 'gemi', 'start'];
+    const shouldTriggerFlow = flowTriggers.some(trigger => messageText.includes(trigger));
 
-    if (!sendResult.success) {
-      console.error('Failed to send reply:', sendResult.error);
+    let sendResult;
+
+    if (shouldTriggerFlow) {
+      // Trigger Flow
+      console.log('🚀 Triggering WhatsApp Flow for:', parsedMessage.from);
+      sendResult = await sendWhatsAppFlow(parsedMessage.from);
+
+      if (!sendResult.success) {
+        console.error('Failed to send Flow:', sendResult.error);
+        // Fallback to text message
+        sendResult = await sendWhatsAppMessage(
+          parsedMessage.from,
+          'Flow başlatılamadı. Lütfen daha sonra tekrar deneyin.'
+        );
+      } else {
+        console.log('✅ Flow message sent successfully');
+      }
     } else {
-      console.log('✅ Reply sent successfully');
+      // Send regular "ok" reply
+      sendResult = await sendWhatsAppMessage(
+        parsedMessage.from,
+        'ok'
+      );
+
+      if (!sendResult.success) {
+        console.error('Failed to send reply:', sendResult.error);
+      } else {
+        console.log('✅ Reply sent successfully');
+      }
     }
 
     // Save message and reply to Strapi
