@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "whatsapp_messages",
+  "info": {
+    "singularName": "whatsapp-message",
+    "pluralName": "whatsapp-messages",
+    "displayName": "WhatsApp Message",
+    "description": "WhatsApp Business API incoming messages"
+  },
+  "options": {
+    "draftAndPublish": true,
+    "comment": ""
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": false
+    }
+  },
+  "attributes": {
+    "from": {
+      "type": "string",
+      "required": true,
+      "unique": false,
+      "maxLength": 50,
+      "minLength": 5
+    },
+    "message": {
+      "type": "text",
+      "required": true
+    },
+    "messageId": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 255
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "received",
+        "replied"
+      ],
+      "default": "received",
+      "required": true
+    },
+    "reply": {
+      "type": "text",
+      "required": false
+    }
+  }
+}
