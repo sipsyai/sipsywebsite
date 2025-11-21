@@ -26,7 +26,8 @@ class EncryptionService {
 
   /**
    * Decrypt incoming encrypted request from WhatsApp
-   * WhatsApp sends encrypted data using RSA-OAEP with our public key
+   * WhatsApp uses AES-128-GCM with RSA-OAEP encrypted key
+   * Per WhatsApp Flows documentation for data_api_version 3.0
    */
   decryptRequest(encryptedData: string, encryptedAesKey: string, initialVector: string): any {
     if (!this.privateKey) {
@@ -34,7 +35,8 @@ class EncryptionService {
     }
 
     try {
-      // Decrypt the AES key using RSA private key
+      // Step 1: Decrypt the AES key using RSA private key
+      console.log('[EncryptionService] Decrypting AES key...');
       const decryptedAesKey = crypto.privateDecrypt(
         {
           key: this.privateKey,
@@ -43,42 +45,73 @@ class EncryptionService {
         },
         Buffer.from(encryptedAesKey, 'base64')
       );
+      console.log('[EncryptionService] AES key decrypted, length:', decryptedAesKey.length);
 
-      // Decrypt the data using AES key
-      const decipher = crypto.createDecipheriv(
-        'aes-256-cbc',
-        decryptedAesKey,
-        Buffer.from(initialVector, 'base64')
-      );
+      // Step 2: Decrypt the flow data using AES-128-GCM
+      const flowDataBuffer = Buffer.from(encryptedData, 'base64');
+      const iv = Buffer.from(initialVector, 'base64');
 
-      let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
-      decrypted += decipher.final('utf8');
+      // For AES-GCM, the authentication tag is appended at the end (16 bytes)
+      const TAG_LENGTH = 16;
+      const encryptedDataBody = flowDataBuffer.subarray(0, -TAG_LENGTH);
+      const authTag = flowDataBuffer.subarray(-TAG_LENGTH);
 
-      return JSON.parse(decrypted);
+      console.log('[EncryptionService] Encrypted data length:', encryptedDataBody.length);
+      console.log('[EncryptionService] Auth tag length:', authTag.length);
+
+      // Create decipher with AES-128-GCM
+      const decipher = crypto.createDecipheriv('aes-128-gcm', decryptedAesKey, iv);
+      decipher.setAuthTag(authTag);
+
+      // Decrypt
+      let decrypted = decipher.update(encryptedDataBody);
+      decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+      const decryptedStr = decrypted.toString('utf8');
+      console.log('[EncryptionService] Request decrypted successfully');
+
+      return JSON.parse(decryptedStr);
     } catch (error) {
-      console.error('Decryption error:', error);
+      console.error('[EncryptionService] Decryption error:', error);
       throw new Error('Failed to decrypt request');
     }
   }
 
   /**
    * Encrypt response data for WhatsApp
-   * Response is encrypted using the same AES key that was used for the request
+   * Uses AES-128-GCM with flipped IV
+   * Per WhatsApp Flows documentation for data_api_version 3.0
    */
   encryptResponse(responseData: any, aesKey: Buffer, initialVector: string): string {
     try {
-      const cipher = crypto.createCipheriv(
-        'aes-256-cbc',
-        aesKey,
-        Buffer.from(initialVector, 'base64')
-      );
+      const iv = Buffer.from(initialVector, 'base64');
 
-      let encrypted = cipher.update(JSON.stringify(responseData), 'utf8', 'base64');
-      encrypted += cipher.final('base64');
+      // Flip the IV (bitwise NOT)
+      const flippedIv = Buffer.alloc(iv.length);
+      for (let i = 0; i < iv.length; i++) {
+        flippedIv[i] = ~iv[i];
+      }
 
-      return encrypted;
+      console.log('[EncryptionService] Encrypting response with flipped IV');
+
+      // Create cipher with AES-128-GCM
+      const cipher = crypto.createCipheriv('aes-128-gcm', aesKey, flippedIv);
+
+      // Encrypt
+      let encrypted = cipher.update(JSON.stringify(responseData), 'utf8');
+      encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+      // Get auth tag
+      const authTag = cipher.getAuthTag();
+
+      // Concatenate encrypted data + auth tag
+      const result = Buffer.concat([encrypted, authTag]);
+
+      console.log('[EncryptionService] Response encrypted successfully');
+
+      return result.toString('base64');
     } catch (error) {
-      console.error('Encryption error:', error);
+      console.error('[EncryptionService] Encryption error:', error);
       throw new Error('Failed to encrypt response');
     }
   }
