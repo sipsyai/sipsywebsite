@@ -13,8 +13,8 @@ import encryptionService from '../services/encryption-service';
 
 // Type definitions for WhatsApp Flow API
 interface FlowRequest {
-  action: 'INIT' | 'data_exchange';
-  flow_token: string;
+  action: 'INIT' | 'data_exchange' | 'ping';
+  flow_token?: string;
   version?: string;
   screen?: string;
   data?: Record<string, any>;
