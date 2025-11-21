@@ -35,6 +35,9 @@ export default {
   async handle(ctx) {
     try {
       let requestBody: FlowRequest;
+      let aesKey: Buffer | null = null;
+      let initialVector: string | null = null;
+      let isEncrypted = false;
 
       console.log('[FlowController] Raw request body keys:', Object.keys(ctx.request.body));
       console.log('[FlowController] Has encrypted_flow_data:', !!ctx.request.body.encrypted_flow_data);
@@ -43,6 +46,7 @@ export default {
       // Check if request is encrypted
       if (ctx.request.body.encrypted_flow_data && encryptionService.isConfigured()) {
         console.log('[FlowController] Decrypting encrypted request');
+        isEncrypted = true;
 
         try {
           const decrypted = encryptionService.decryptRequest(
@@ -51,11 +55,13 @@ export default {
             ctx.request.body.initial_vector
           );
 
-          requestBody = decrypted;
+          requestBody = decrypted.decryptedData;
+          aesKey = decrypted.aesKey;
+          initialVector = decrypted.initialVector;
           console.log('[FlowController] Request decrypted successfully');
         } catch (error) {
           console.error('[FlowController] Decryption failed:', error);
-          ctx.status = 400;
+          ctx.status = 421; // Per WhatsApp spec
           ctx.body = { error_message: 'Failed to decrypt request' };
           return;
         }
@@ -77,12 +83,22 @@ export default {
       if (action === 'ping') {
         // Health check request from WhatsApp
         console.log('[FlowController] Health check (ping) request');
-        ctx.status = 200;
-        ctx.body = {
+        const response = {
           data: {
             status: 'active'
           }
         };
+
+        // Encrypt response if request was encrypted
+        if (isEncrypted && aesKey && initialVector) {
+          const encryptedResponse = encryptionService.encryptResponse(response, aesKey, initialVector);
+          ctx.status = 200;
+          ctx.set('Content-Type', 'text/plain');
+          ctx.body = encryptedResponse;
+        } else {
+          ctx.status = 200;
+          ctx.body = response;
+        }
         return;
       }
 
@@ -132,11 +148,18 @@ export default {
         return;
       }
 
-      // Return response
-      ctx.status = 200;
-      ctx.body = response;
-
-      console.log(`[FlowController] Response sent:`, response);
+      // Return response (encrypt if request was encrypted)
+      if (isEncrypted && aesKey && initialVector) {
+        const encryptedResponse = encryptionService.encryptResponse(response, aesKey, initialVector);
+        ctx.status = 200;
+        ctx.set('Content-Type', 'text/plain');
+        ctx.body = encryptedResponse;
+        console.log(`[FlowController] Encrypted response sent (Base64 length: ${encryptedResponse.length})`);
+      } else {
+        ctx.status = 200;
+        ctx.body = response;
+        console.log(`[FlowController] Unencrypted response sent:`, response);
+      }
     } catch (error) {
       console.error('[FlowController] Error handling flow request:', error);
 

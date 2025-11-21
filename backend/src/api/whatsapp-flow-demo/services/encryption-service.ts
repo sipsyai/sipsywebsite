@@ -28,8 +28,13 @@ class EncryptionService {
    * Decrypt incoming encrypted request from WhatsApp
    * WhatsApp uses AES-128-GCM with RSA-OAEP encrypted key
    * Per WhatsApp Flows documentation for data_api_version 3.0
+   * Returns: { decryptedData, aesKey, initialVector }
    */
-  decryptRequest(encryptedData: string, encryptedAesKey: string, initialVector: string): any {
+  decryptRequest(encryptedData: string, encryptedAesKey: string, initialVector: string): {
+    decryptedData: any;
+    aesKey: Buffer;
+    initialVector: string
+  } {
     if (!this.privateKey) {
       throw new Error('Private key not configured');
     }
@@ -70,7 +75,11 @@ class EncryptionService {
       const decryptedStr = decrypted.toString('utf8');
       console.log('[EncryptionService] Request decrypted successfully');
 
-      return JSON.parse(decryptedStr);
+      return {
+        decryptedData: JSON.parse(decryptedStr),
+        aesKey: decryptedAesKey,
+        initialVector
+      };
     } catch (error) {
       console.error('[EncryptionService] Decryption error:', error);
       throw new Error('Failed to decrypt request');
