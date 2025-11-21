@@ -298,6 +298,8 @@ export default {
 
           return {
             id: machine.id,
+            title: `${machine.code} - ${machine.name}`,
+            description: `${maintenanceStatus.message} | ${machine.current_hours} saat`,
             code: machine.code,
             name: machine.name,
             current_hours: machine.current_hours,

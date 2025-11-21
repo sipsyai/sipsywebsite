@@ -157,16 +157,10 @@
               "id": {
                 "type": "string"
               },
-              "code": {
+              "title": {
                 "type": "string"
               },
-              "name": {
-                "type": "string"
-              },
-              "current_hours": {
-                "type": "number"
-              },
-              "maintenance_status": {
+              "description": {
                 "type": "string"
               }
             }
@@ -174,10 +168,8 @@
           "__example__": [
             {
               "id": "machine_001",
-              "code": "ME-01",
-              "name": "Ana Motor (Main Engine)",
-              "current_hours": 12450,
-              "maintenance_status": "✅ 50 hours until next maintenance"
+              "title": "ME-01 - Ana Motor (Main Engine)",
+              "description": "✅ 50 hours until next maintenance | 12450 saat"
             }
           ]
         }
@@ -194,8 +186,6 @@
             "name": "selected_machine_id",
             "label": "Makineler",
             "data-source": "${data.machines}",
-            "label-field": "name",
-            "description-field": "maintenance_status",
             "required": true
           },
           {
