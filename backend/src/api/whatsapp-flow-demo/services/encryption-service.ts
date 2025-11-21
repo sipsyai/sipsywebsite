@@ -12,7 +12,16 @@ class EncryptionService {
 
   constructor() {
     // Load private key from environment
-    this.privateKey = process.env.WHATSAPP_FLOW_PRIVATE_KEY || null;
+    // Convert \n strings to actual newlines
+    const key = process.env.WHATSAPP_FLOW_PRIVATE_KEY;
+    if (key) {
+      this.privateKey = key.replace(/\\n/g, '\n');
+      console.log('[EncryptionService] Private key loaded successfully');
+      console.log('[EncryptionService] Key starts with:', this.privateKey.substring(0, 30));
+    } else {
+      this.privateKey = null;
+      console.log('[EncryptionService] No private key configured');
+    }
   }
 
   /**

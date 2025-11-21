@@ -36,6 +36,10 @@ export default {
     try {
       let requestBody: FlowRequest;
 
+      console.log('[FlowController] Raw request body keys:', Object.keys(ctx.request.body));
+      console.log('[FlowController] Has encrypted_flow_data:', !!ctx.request.body.encrypted_flow_data);
+      console.log('[FlowController] Encryption configured:', encryptionService.isConfigured());
+
       // Check if request is encrypted
       if (ctx.request.body.encrypted_flow_data && encryptionService.isConfigured()) {
         console.log('[FlowController] Decrypting encrypted request');
@@ -57,6 +61,7 @@ export default {
         }
       } else {
         // Unencrypted request (for testing)
+        console.log('[FlowController] Processing unencrypted request');
         requestBody = ctx.request.body as FlowRequest;
       }
 
