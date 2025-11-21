@@ -73,7 +73,20 @@ export default {
         data
       });
 
-      // Validate action
+      // Handle ping (health check) first - no validation needed
+      if (action === 'ping') {
+        // Health check request from WhatsApp
+        console.log('[FlowController] Health check (ping) request');
+        ctx.status = 200;
+        ctx.body = {
+          data: {
+            status: 'active'
+          }
+        };
+        return;
+      }
+
+      // Validate action for non-ping requests
       const actionValidation = validationService.validateFlowAction(action);
       if (!actionValidation.isValid) {
         ctx.status = 400;
