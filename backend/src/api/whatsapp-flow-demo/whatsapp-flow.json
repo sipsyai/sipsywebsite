@@ -310,7 +310,11 @@
           },
           {
             "type": "TextSubheading",
-            "text": "${data.machine_code} - ${data.machine_name}"
+            "text": "${data.machine_code}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.machine_name}"
           },
           {
             "type": "TextBody",
